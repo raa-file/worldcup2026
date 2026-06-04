@@ -461,6 +461,25 @@
     z-index: 1;
   }
 
+  .match-broadcast {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+  }
+
+  .broadcast-channel {
+    color: #F5C842;
+    font-weight: 600;
+  }
+
+  .broadcast-commentator {
+    color: var(--text-muted);
+  }
+
   /* ===== TIKTOK BUTTON ===== */
   .tiktok-btn {
     display: inline-flex;
@@ -488,14 +507,16 @@
   /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
     .match-card {
-      grid-template-columns: 1fr;
-      text-align: center;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      padding: 12px 10px;
     }
-    .team-side.home, .team-side.away {
-      align-items: center;
-      text-align: center;
-    }
-    .match-card { gap: 10px; }
+    .team-flag { font-size: 1.4rem; }
+    .team-name { font-size: 0.82rem; }
+    .match-center { min-width: 90px; }
+    .countdown-val { font-size: 0.72rem; min-width: 24px; padding: 2px 4px; }
+    .countdown-label { font-size: 0.45rem; }
+    .match-broadcast { font-size: 0.62rem; }
     .info-bar { gap: 16px; }
     .info-value { font-size: 1.1rem; }
   }
@@ -1130,15 +1151,15 @@ function buildCountdown(cdBox, matchDate) {
   if (!t) return false;
 
   let html = '<div class="countdown">';
-  if (t.d > 0) {
-    html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.d)}</span><span class="countdown-label">يوم</span></div>`;
-    html += `<span class="countdown-sep">:</span>`;
-  }
-  html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.h)}</span><span class="countdown-label">ساعة</span></div>`;
+  html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.s)}</span><span class="countdown-label">ثانية</span></div>`;
   html += `<span class="countdown-sep">:</span>`;
   html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.m)}</span><span class="countdown-label">دقيقة</span></div>`;
   html += `<span class="countdown-sep">:</span>`;
-  html += `<div class="countdown-unit"><span class="countdown-val" id="s_${cdBox.id}">${pad(t.s)}</span><span class="countdown-label">ثانية</span></div>`;
+  html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.h)}</span><span class="countdown-label">ساعة</span></div>`;
+  if (t.d > 0) {
+    html += `<span class="countdown-sep">:</span>`;
+    html += `<div class="countdown-unit"><span class="countdown-val">${pad(t.d)}</span><span class="countdown-label">يوم</span></div>`;
+  }
   html += '</div>';
   cdBox.innerHTML = html;
   return true;
@@ -1169,8 +1190,105 @@ initCountdowns();
 setInterval(tickCountdowns, 1000);
 
 // ========================
-// TABS
+// BROADCAST DATA
 // ========================
+const broadcastData = {
+  // Group A
+  "2026-06-11T20:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-12T03:00:00Z": { channel: "SSC 2", commentator: "عصام الشوالي" },
+  "2026-06-18T17:00:00Z": { channel: "SSC 2", commentator: "يوسف سيف" },
+  "2026-06-19T02:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-25T02:00:00Z": { channel: "SSC 1", commentator: "رؤوف خليف" },
+  // Group B
+  "2026-06-12T20:00:00Z": { channel: "SSC 3", commentator: "علي محمد علي" },
+  "2026-06-13T20:00:00Z": { channel: "SSC 2", commentator: "عصام الشوالي" },
+  "2026-06-18T23:00:00Z": { channel: "SSC 3", commentator: "يوسف سيف" },
+  "2026-06-19T02:00:00Z": { channel: "SSC 4", commentator: "حفيظ دراجي" },
+  "2026-06-24T20:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  // Group C
+  "2026-06-13T23:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-14T02:00:00Z": { channel: "SSC 3", commentator: "يوسف سيف" },
+  "2026-06-19T23:00:00Z": { channel: "SSC 3", commentator: "حفيظ دراجي" },
+  "2026-06-20T02:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-24T23:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  // Group D
+  "2026-06-13T02:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-13T05:00:00Z": { channel: "SSC 4", commentator: "علي محمد علي" },
+  "2026-06-19T20:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-20T05:00:00Z": { channel: "SSC 3", commentator: "يوسف سيف" },
+  "2026-06-26T03:00:00Z": { channel: "SSC 1", commentator: "رؤوف خليف" },
+  // Group H - Saudi Arabia
+  "2026-06-15T17:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-15T23:00:00Z": { channel: "SSC 1 HD", commentator: "فهد العتيبي" },
+  "2026-06-21T17:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-21T23:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  "2026-06-27T01:00:00Z": { channel: "SSC 1 HD", commentator: "فهد العتيبي" },
+  // Group J - Argentina
+  "2026-06-17T02:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-17T05:00:00Z": { channel: "SSC 3", commentator: "يوسف سيف" },
+  "2026-06-22T18:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-23T04:00:00Z": { channel: "SSC 3", commentator: "حفيظ دراجي" },
+  "2026-06-28T03:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  // Group E
+  "2026-06-14T18:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  "2026-06-15T00:00:00Z": { channel: "SSC 4", commentator: "حفيظ دراجي" },
+  "2026-06-20T21:00:00Z": { channel: "SSC 2", commentator: "عصام الشوالي" },
+  "2026-06-26T01:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  // Group F
+  "2026-06-14T21:00:00Z": { channel: "SSC 3", commentator: "حفيظ دراجي" },
+  "2026-06-20T18:00:00Z": { channel: "SSC 2", commentator: "يوسف سيف" },
+  "2026-06-26T00:00:00Z": { channel: "SSC 3", commentator: "علي محمد علي" },
+  // Group G
+  "2026-06-15T20:00:00Z": { channel: "SSC 2", commentator: "يوسف سيف" },
+  "2026-06-21T20:00:00Z": { channel: "SSC 2", commentator: "حفيظ دراجي" },
+  // Group I
+  "2026-06-16T20:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-16T23:00:00Z": { channel: "SSC 3", commentator: "يوسف سيف" },
+  // Group K
+  "2026-06-17T18:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  "2026-06-18T03:00:00Z": { channel: "SSC 3", commentator: "علي محمد علي" },
+  "2026-06-28T00:30:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  // Group L
+  "2026-06-17T21:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-18T00:00:00Z": { channel: "SSC 4", commentator: "حفيظ دراجي" },
+  "2026-06-23T21:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  // Knockouts
+  "2026-06-28T20:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-06-29T18:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-06-30T18:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  "2026-07-02T20:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-07-03T01:00:00Z": { channel: "SSC 2", commentator: "فهد العتيبي" },
+  "2026-07-03T22:30:00Z": { channel: "SSC 1", commentator: "رؤوف خليف" },
+  "2026-07-04T18:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-07-04T22:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-07-05T21:00:00Z": { channel: "SSC 1", commentator: "رؤوف خليف" },
+  "2026-07-07T17:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-07-09T21:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-07-10T20:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-07-11T22:00:00Z": { channel: "SSC 1", commentator: "رؤوف خليف" },
+  "2026-07-12T02:00:00Z": { channel: "SSC 2", commentator: "عصام الشوالي" },
+  "2026-07-14T20:00:00Z": { channel: "SSC 1", commentator: "عصام الشوالي" },
+  "2026-07-15T20:00:00Z": { channel: "SSC 1", commentator: "فهد العتيبي" },
+  "2026-07-18T22:00:00Z": { channel: "SSC 2", commentator: "رؤوف خليف" },
+  "2026-07-19T20:00:00Z": { channel: "SSC 1 HD", commentator: "عصام الشوالي" },
+};
+
+function injectBroadcast() {
+  document.querySelectorAll('.match-card[data-date]').forEach(card => {
+    const key = card.dataset.date;
+    const info = broadcastData[key];
+    const cdBox = card.querySelector('.cd-box');
+    if (!info || !cdBox) return;
+    // Avoid double injection
+    if (cdBox.previousElementSibling && cdBox.previousElementSibling.classList.contains('match-broadcast')) return;
+    const el = document.createElement('div');
+    el.className = 'match-broadcast';
+    el.innerHTML = `<span class="broadcast-channel">📺 ${info.channel}</span><span class="broadcast-commentator">🎙️ ${info.commentator}</span>`;
+    cdBox.parentNode.insertBefore(el, cdBox);
+  });
+}
+
+injectBroadcast();
 function showStage(id) {
   document.querySelectorAll('.stage-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
